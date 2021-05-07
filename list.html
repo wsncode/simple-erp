@@ -1,0 +1,1565 @@
+{% extends "pages/base.html" %}
+
+{% block body %}
+{% include "pages/headline.html" %}
+
+<div id="op_area" style="margin-top:30px;margin-bottom:10px;width:100%;height:70px;border-bottom:2px  solid  #bfbfbf;">
+    <ul style="list-style:none;padding:0;margin:0">
+        <li style="float:left"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal" style="background:#ffa64d;border:none;color:black;outline:none;box-shadow:none;" onclick="get_add_eng_eid();">Add New Lot</button></li>
+        <li style="float:left">
+            {% include "lots/components/upload.html" %}
+        </li>
+        <li style="float:left"><a class="btn btn-primary" href="#" data-target="#editModal" onclick="change_eng_eid();init_edit();" style="margin-left:20px;background:#ffa64d;border:none;outline:none;box-shadow:none;color:black;">Edit</a></li>
+        <li style="float:left"><a class="btn btn-primary" href="#"data-target="#takeModal" onclick="change_eng_eid();init_take();" style="margin-left:20px;background:#ffa64d;border:none;outline:none;box-shadow:none;color:black;">Take</a></li>
+        <li style="float:left"><a class="btn btn-primary" href="#" onclick="change_eng_eid(); init_return();" style="margin-left:20px;background:#ffa64d;border:none;outline:none;box-shadow:none;color:black;">Return</a></li>
+        <li style="float:left"><a class="btn btn-primary" href="#" data-target="#splitModal" onclick="change_eng_eid();init_split();get_split_eng_eid();" style="margin-left:20px;background:#ffa64d;border:none;outline:none;box-shadow:none;color:black;">Split</a></li>
+        <li style="float:left"><a class="btn btn-primary" href="#" data-target="#mergeModal" onclick="change_eng_eid();init_merge();" style="margin-left:20px; background:#ffa64d;border:none;outline:none;box-shadow:none;color:black;">Merge</a></li>
+        <li style="float:left"><a class="btn btn-primary" href="#" data-target="#scrapModal" onclick="change_eng_eid();init_scrap();" style="margin-left:20px;background:#ffa64d;border:none;;outline:none;box-shadow:none;color:black;">Scrap</a></li>
+        <li style="float:left"><a class="btn btn-info" onclick="do_export();" style="margin-left:20px;background:#ffa64d;border:none;;outline:none;box-shadow:none;color:black;">Export Excel</a></li>
+        <li style="float:right"><a style="margin-right:30px;font-family:Microsoft Yahei; font-size:14px; color:#787d82" href="/logout/">Log out</a></li>
+        <li style="float:right"><a style="margin-right:30px;font-family:Microsoft Yahei;font-size: 14px; color:#787d82;" href="/msg/">Message<span class="badge badge-light"></span></a></li>
+        <li style="float:right"><a style="margin-right:30px;font-family:Microsoft Yahei; font-size:14px; color:#787d82;">{{request.user.member.name}}</a></li>
+    </ul>
+</div>
+
+
+<table style="line-height:10px;background:#ffffff;" class="table table-hover  table-bordered table-striped">
+    <thead  style="background:#bfbfbf;" class="active">
+    <tr  style="white-space:nowrap; text-align:center;">
+        <th scope="col">Operation</th>
+        <th scope="col">S.No</th>
+        <th scope="col">Status</th>
+        <th scope="col">Lot Number</th>
+        <th scope="col">MFG Lot Number</th>
+        <th scope="col">LPN</th>
+        <th scope="col">Part Number</th>
+        <th scope="col">Package Description</th>
+        <th scope="col">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspTrace Code&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</th>
+        <th scope="col">QTY</th>
+        <th scope="col">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspEngineering Purpose&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</th>
+        <th scope="col">Box QTY</th>
+        <th scope="col">RKS/ENG</th>
+        <th scope="col">Shelf Description</th>
+        <th scope="col">Shelf Code</th>
+        <th scope="col">PE</th>
+        <th scope="col">PE Manager</th>
+        <th scope="col">Last Update Time</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr style="white-space:nowrap;background:#bfbfbf;font-size:15px; ">
+        <th><a class="btn btn-primary btn-block " style="font-size:15px;" href="/lots/" role="button">Clear</a></th>
+        <th><button type="button" class="btn btn-primary btn-block" style="font-size:15px;"onclick="do_search();">Search</button></th>
+        <th>
+            <select class="custom-select" id="status">
+                <option value="in" >In stock</option>
+                <option value="out" >Out</option>
+                <option value="scrapped" >Scrapped</option>
+                <option value="submit" >Submit for scrap</option>
+                <option value="pending" >Pending for scrap</option>
+                <option value="consumed" >Lot consumed</option>
+                <option value="all" >All</option>
+            </select></th>
+        <th> <input type="text" class="form-control input-sm" id="eng-eid" value="{{request.GET.eng_eid}}"> </th>
+        <th> <input type="text" class="form-control" id="mfg-eid" value="{{request.GET.mfg_eid}}"></th>
+        <th> <input type="text" class="form-control" id="LPN" value="{{request.GET.LPN}}"> </th>
+        <th> <input type="text" class="form-control" id="part_number" value="{{request.GET.part_number}}"> </th>
+        <th> <input type="text" class="form-control" id="package" value="{{request.GET.package}}"> </th>
+        <th> <input type="text" class="form-control" id="tracecode" value="{{request.GET.tracecode}}"> </th>
+        <th> <input type="text" class="form-control" id="qty" value="{{request.GET.qty}}"> </th>
+        <th> <input type="text" class="form-control" id="purpose" value="{{request.GET.purpose}}"> </th>
+        <th> <input type="text" class="form-control" id="box_number" value="{{request.GET.box_number}}"> </th>
+        <th> <input type="text" class="form-control" id="source" value="{{request.GET.source}}"> </th>
+        <th> <input type="text" class="form-control" id="shelf_number" value="{{request.GET.shelf_number}}"> </th>
+        <th> <input type="text" class="form-control" id="shelf_code" value="{{request.GET.shelf_code}}"> </th>
+        <th> <input type="text" class="form-control ac_needed ac_pe " id="PE_id" value="{{request.GET.PE_id}}"></th>
+        <th> <input type="text" class="form-control ac_needed ac_manager" id="PM_id" value="{{request.GET.PM_id}}"></th>
+        <th><input type='text' class="form-control datetimepicker" id="date" value="{{request.GET.date}}"/></th>
+    </tr>
+    {% for lot in lots %}
+    <tr style="font-size:15px;"  onclick="toggle_table_line(this);">
+        <td>
+            <div class="input-group">
+                <input type="checkbox"  class="listed_check_no col-sm-6"data-eng-eid="{{lot.eng_eid}}" data-qty="{{lot.qty}}" data-shelf-number="{{lot.shelf_number}}" data-shelf-code="{{lot.shelf_code}}">
+            </div>
+        </td>
+        <td> {{forloop.counter}} </td>
+        <td> {{lot.get_status_display}} </td>
+        <td style="white-space:nowrap;line-height:15px"><a href="/record/{{lot.eng_eid}}" >{{lot.eng_eid}}</a></td>
+        <td style="word-break:break-all;line-height:15px"> {{lot.mfg_eid }}</td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.LPN}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.part_number}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.package}} </td>
+        <td style="word-break:break-all;line-height:15px"> {{lot.tracecode}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.qty}} </td>
+        <td style="word-wrap:break-word;line-height:15px"> {{lot.purpose}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.box_number}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.source}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.shelf_number}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.shelf_code}} </td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.PE.member.name}}</td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.manager.member.name}}</td>
+        <td style="white-space:nowrap;line-height:15px"> {{lot.date | date:"Y-m-d H:i"}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- pagination -->
+
+
+<!-- Modal for Add-->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" >
+                <span><h5 class="modal-title" id="exampleModalLabel">Add New Lot</h5></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add_form" class="form-horizontal" role="form" style="line-height:15px;">
+                    <div class="form-group">
+                        <label >Lot Number</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" id="add_eng_id" disabled >
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label >MFG Lot Number</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: T1MEA1Z1D710" id="add_mfg_id" onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label >LPN</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: K20_256R" id="add_lpn"onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)" >
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Part Number</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: MK22FN256VLL12" id="add_part_number" onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Package Description</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: LQFP 144 20SQ1.4P0.5 C90" id="add_package" onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Trace Code</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: COXN AC1741C" id="add_tracecode" onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>QTY</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: 200" id="add_qty" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Engineering Purpose</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: Qual Lot" id="add_ppurpose" maxlength="40">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Box QTY</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control" placeholder="eg: 6" id="add_box_number" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>RKS/ENG</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <select class="form-control" id="add_source">
+                                <option value="RKS">RKS</option>
+                                <option value="ENG">ENG</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf Description</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <select class="form-control" id="add_shelf_number">
+                                <option value="老厂一层 #1">老厂一层 #1</option>
+                                <option value="老厂一层 #2">老厂一层 #2</option>
+                                <option value="老厂一层 #3">老厂一层 #3</option>
+                                <option value="老厂一层 #4">老厂一层 #4</option>
+                                <option value="老厂一层 #5">老厂一层 #5</option>
+                                <option value="老厂一层 #6">老厂一层 #6</option>
+                                <option value="风机夹层 #2">风机夹层 #2</option>
+                                <option value="风机夹层 #4">风机夹层 #4</option>
+                                <option value="风机夹层 #5">风机夹层 #5</option>
+                                <option value="风机夹层 #6">风机夹层 #6</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf Code</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control"  id="add_shelf_code" value="L00" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>PE</label>
+                        <div class="inputbox col-sm-8" style="float:right;">
+                            <input type="text" class="form-control ac_needed ac_pe" placeholder="eg: Lily" id="add_pe" >
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="add_lots(this);">Add</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick='$("#add_form")[0].reset()'>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for merge operate -->
+<div class="modal fade" id="mergeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><h5 class="modal-title">Merge</h5></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Source Lot number</label>
+                        <textarea type="text" class="col-sm-8 form-control current_eng_eid" rows="3"  placeholder="" id="merge_eng_eid" disabled></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Merge to Lot number</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="mergeto_eng_eid"onkeyup="(function(_this){$(_this).val($(_this).val().toUpperCase())})(this)" >
+                    </div>
+                    <div class="form-group">
+                        <label>Box QTY</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="merge_box_number" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf Description</label>
+                        <select class="col-sm-8 form-control" id="merge_shelf_number">
+                                <option value="老厂一层 #1">老厂一层 #1</option>
+                                <option value="老厂一层 #2">老厂一层 #2</option>
+                                <option value="老厂一层 #3">老厂一层 #3</option>
+                                <option value="老厂一层 #4">老厂一层 #4</option>
+                                <option value="老厂一层 #5">老厂一层 #5</option>
+                                <option value="老厂一层 #6">老厂一层 #6</option>
+                                <option value="风机夹层 #2">风机夹层 #2</option>
+                                <option value="风机夹层 #4">风机夹层 #4</option>
+                                <option value="风机夹层 #5">风机夹层 #5</option>
+                                <option value="风机夹层 #6">风机夹层 #6</option> 
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf code</label>
+                            <input type="text" class="col-sm-8 form-control"  id="merge_shelf_code" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Requestor</label>
+                        <input type="text" class="col-sm-8 form-control ac_needed ac_pe" placeholder="" id="merge_pe_name" >
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" >
+                <button type="button" class="btn btn-primary" onclick="merge_lots(this);" >Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for edit operate -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><h5 class="modal-title">Edit</h5></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form style="line-height:10px;">
+                    <div class="form-group">
+                        <label >Eng Lot ID</label>
+                        <input type="text" class="col-sm-8 form-control current_eng_eid" placeholder="" id="edit_eng_eid" disabled >
+                    </div>
+                    {% if request.user.member.role == "mc" %}
+                    <div class="form-group">
+                        <label>Shelf Description</label>
+                        <select class="col-sm-8 form-control" id="edit_shelf_number">
+                                <option value="老厂一层 #1">老厂一层 #1</option>
+                                <option value="老厂一层 #2">老厂一层 #2</option>
+                                <option value="老厂一层 #3">老厂一层 #3</option>
+                                <option value="老厂一层 #4">老厂一层 #4</option>
+                                <option value="老厂一层 #5">老厂一层 #5</option>
+                                <option value="老厂一层 #6">老厂一层 #6</option>
+                                <option value="风机夹层 #2">风机夹层 #2</option>
+                                <option value="风机夹层 #4">风机夹层 #4</option>
+                                <option value="风机夹层 #5">风机夹层 #5</option>
+                                <option value="风机夹层 #6">风机夹层 #6</option> 
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf code</label>
+                        <input type="text" class="col-sm-8 form-control"  id="edit_shelf_code" value="L00" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Box QTY</label>
+                        <input type="text" class="col-sm-offset-2 col-sm-8 form-control" placeholder="" id="edit_box_number" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                    </div>
+                    {% elif request.user.member.role == "pe" %}
+                    <div class="form-group">
+                        <label>PE</label>
+                        <input type="text" class="form-control ac_needed ac_pe" id="edit_pe_name" >
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="edit_lots(this);">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for take operate -->
+<div class="modal fade" id="takeModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><h5 class="modal-title">Take</h5></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Lot number:</label>
+                        <textarea type="text" class="col-sm-8 form-control current_eng_eid" rows="3" placeholder="" id="take_eng_eid" disabled></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Requestor:</label>
+                        <input type="text" class="col-sm-8 form-control ac_needed ac_pe" placeholder="" id="take_pe_name" >
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="take_lots(this);">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for return operate -->
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog">
+    <div  class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><h5 class="modal-title">Return</h5></span>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Lot number:</label>
+                        <textarea type="text" class="col-sm-8 form-control current_eng_eid" rows="1" placeholder="" id="return_eng_eid" disabled></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Take QTY:</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="return_take_qty" disabled >
+                    </div>
+                    <div class="form-group">
+                        <label>Return QTY:</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="return_qty" oninput="return_qty_change();"onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf Description</label>
+                        <select class="col-sm-8 form-control" id="return_shelf_number">
+                                <option value="老厂一层 #1">老厂一层 #1</option>
+                                <option value="老厂一层 #2">老厂一层 #2</option>
+                                <option value="老厂一层 #3">老厂一层 #3</option>
+                                <option value="老厂一层 #4">老厂一层 #4</option>
+                                <option value="老厂一层 #5">老厂一层 #5</option>
+                                <option value="老厂一层 #6">老厂一层 #6</option>
+                                <option value="风机夹层 #2">风机夹层 #2</option>
+                                <option value="风机夹层 #4">风机夹层 #4</option>
+                                <option value="风机夹层 #5">风机夹层 #5</option>
+                                <option value="风机夹层 #6">风机夹层 #6</option> 
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf code</label>
+                         <input type="text" class="col-sm-8 form-control"  id="return_shelf_code" disabled>
+                    </div>
+                    <div id="justification-in-return">
+                        <div class="row">
+                            <div class="col-3">
+                                <label>Justification:</label>
+                            </div>
+                            <div class="col-4"></div>
+                            <div class="col-3"></div>
+                            <div class="col-1">
+                                <a href="#"  class="btn btn-primary btn-sm" onclick="add_justification();" >&nbspAdd&nbsp&nbsp</a>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-group">
+                                <div id="default_justification">
+                                    <div class="row" >
+                                        <div class="col-3">
+                                            <select class="custom-select return_type">
+                                                <option value="CQC">CQC Support</option>
+                                                <option value="FA" selected="selected">FA</option>
+                                                <option value="shipped">Shipped</option>
+                                                <option value="others">Others</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" class="form-control return_comment" placeholder="Tracking# or Comments">
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="text" class="form-control input-sm return_comment_qty" placeholder="QTY" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                                        </div>
+                                        <div class="col-1">
+                                            <a href="#" class="btn btn-sm btn-danger" onclick="delete_justification(this);">Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Requestor:</label>
+                        <input type="text" class="form-control ac_needed ac_pe" placeholder="" id="return_pe_name" >
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary"  onclick="return_lots(this);">OK</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for split operate -->
+<div class="modal fade" id="splitModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" >
+                <h5 class="modal-title">Split</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form style="line-height:10px;">
+                    <div class="form-group">
+                        <label>Source lot ID</label>
+                        <input type="text" class="col-sm-8 form-control current_eng_eid" placeholder="" id="split_eng_eid" disabled >
+                    </div>
+                    <div class="form-group">
+                        <label>Sub lot ID</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="split_new_eid" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Split QTY</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="split_qty" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Box QTY</label>
+                        <input type="text" class="col-sm-8 form-control" placeholder="" id="split_box" onkeyup="(function(_this){if(isNaN($(_this).val())){alert('please input number ONLY.'); _this.value='';}})(this)">
+                    </div>
+                    <div class="form-group">
+                        <label>Split purpose</label>
+                        <textarea type="text" class="col-sm-8 form-control" rows="2" placeholder="" id="split_purpose"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf Description</label>
+                        <select class="col-sm-8 form-control" id="split_shelf_number">
+                                <option value="老厂一层 #1">老厂一层 #1</option>
+                                <option value="老厂一层 #2">老厂一层 #2</option>
+                                <option value="老厂一层 #3">老厂一层 #3</option>
+                                <option value="老厂一层 #4">老厂一层 #4</option>
+                                <option value="老厂一层 #5">老厂一层 #5</option>
+                                <option value="老厂一层 #6">老厂一层 #6</option>
+                                <option value="风机夹层 #2">风机夹层 #2</option>
+                                <option value="风机夹层 #4">风机夹层 #4</option>
+                                <option value="风机夹层 #5">风机夹层 #5</option>
+                                <option value="风机夹层 #6">风机夹层 #6</option> 
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Shelf code</label>
+                        <input type="text" class="col-sm-8 form-control"  id="split_shelf_code" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Requestor</label>
+                        <input type="text" class="col-sm-8 form-control ac_needed ac_pe" placeholder="" id="split_pe_name" >
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:10px;">
+                <button type="button" class="btn btn-primary" onclick="split_lots(this);">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for scrap operate -->
+<div class="modal fade" id="scrapModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scrap</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label>Lot ID</label>
+                        <input type="text" class="form-control current_eng_eid" placeholder="" id="scrap_eng_eid" disabled >
+                    </div>
+                    <div class="form-group">
+                        <label>Scrap Qty</label>
+                        <input type="text" class="form-control" placeholder="" id="scrap_qty"  disabled>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="scrap_lots(this);">OK</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="/static/pages/js/thead-fix.js"></script>
+<script type="text/javascript">
+
+    get_multi_input = function(name){
+        pattern = "<}";
+        contents = [];
+        $(name).each(function(_,ins){contents.push($(ins).val())});
+        return contents.join(pattern);
+    };
+
+    add_justification = function(){
+        $("#default_justification").append('<div class="row">'+
+            '<div class="col-3">'+
+            '<select class="custom-select return_type">'+
+            '<option value="FA" selected="selected">FA</option>'+
+            '<option value="CQC">CQC</option>'+
+            '<option value="shipped">shipped</option>'+
+            '<option value="others">others</option>'+
+            '</select>'+
+            '</div>'+
+            '<div class="col-4">'+
+            '<input type="text" class="form-control return_comment" placeholder="tracker# or comment">'+
+            '</div>'+
+            '<div class="col-3">'+
+            '<input type="text" class="form-control return_comment_qty" placeholder="QTY" onkeyup=\"(function(_this){if(isNaN($(_this).val())){alert(\'please input number ONLY.\'); _this.value=\'\';}})(this)\">'+
+            '</div>'+
+            '<div class="col-1">'+
+            '<a href="#" class="btn btn-sm btn-danger" onclick="delete_justification(this);">Delete</a>'+
+            '</div>'+
+            '</div>');
+    };
+
+    delete_justification = function (_this) {
+        $(_this).parent().parent().remove();
+    };
+
+    get_current_checked = function(){
+        var eng_eids = [];
+        $(".listed_check_no:checked").each(function () {
+            eng_eids.push($(this).attr("data-eng-eid"));
+        });
+        return eng_eids;
+    };
+    toggle_table_line = function(_this) {
+        $(_this).toggleClass("table-info");
+    };
+    change_eng_eid = function(){
+        $(".current_eng_eid").val(get_current_checked());
+    };
+    show_records = function(){
+        if($(".listed_check_no:checked").length > 1){
+            alert("Only can choose one lot");
+            return;
+        }
+        get_current_checked().forEach(function(_this){
+            window.open("/record/"+_this);
+        })
+    };
+    merge_lots = function (_this) {
+        if($("#mergeto_eng_eid").val() === ""){
+            $("#mergeto_eng_eid").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#mergeto_eng_eid").removeClass("is-invalid");
+        }
+        if($("#merge_box_number").val() === ""){
+            $("#merge_box_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#merge_box_number").removeClass("is-invalid");
+        }
+        $(_this).attr("disabled",true);
+        $.post("/lots/merge/",{
+            "merge_eng_eid":$("#merge_eng_eid").val(),
+            "mergeto_eng_eid":$("#mergeto_eng_eid").val(),
+            "box_number":$("#merge_box_number").val(),
+            "shelf_number":$("#merge_shelf_number").val(),
+            "shelf_code":$("#merge_shelf_code").val(),
+            "pe_name":$("#merge_pe_name").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                $("#mergeModal").modal('hide');
+                location.reload();
+            }else $(_this).attr("disabled",false);
+        });
+    };
+
+    edit_lots = function (_this) {
+
+        if($("#edit_shelf_number").val() === ""){
+            $("#edit_shelf_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#edit_shelf_number").removeClass("is-invalid");
+        }
+        if($("#edit_shelf_code").val() === ""){
+            $("#edit_shelf_code").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#edit_shelf_code").removeClass("is-invalid");
+        }
+        if($("#edit_box_number").val() === ""){
+            $("#edit_box_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#edit_box_number").removeClass("is-invalid");
+        }
+        $(_this).attr("disabled",true);
+        $.post("/lots/edit/",{
+            "eng_eid":$("#edit_eng_eid").val(),
+            "shelf_number":$("#edit_shelf_number").val(),
+            "shelf_code":$("#edit_shelf_code").val(),
+            "box_number":$("#edit_box_number").val(),
+            "pe_name":$("#edit_pe_name").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                $("#editModal").modal('hide');
+                location.reload();
+            }else $(_this).attr("disabled",false);
+
+        });
+    };
+    take_lots = function (_this) {
+        $(_this).attr("disabled",true);
+        $.post("/lots/take/",{
+            "eng_eid":$("#take_eng_eid").val(),
+            "pe_name":$("#take_pe_name").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                location.reload();
+            }else $(_this).attr("disabled",false);
+        });
+    };
+    return_lots = function (_this) {
+        if($("#return_qty").val() === ""){
+            $("#return_qty").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#return_qty").removeClass("is-invalid");
+        }
+
+        // check sum
+        var return_qty_sum = 0;
+        return_qty_sum = return_qty_sum + Number($("#return_qty").val());
+        $(".return_comment_qty").each(function(){
+            return_qty_sum += Number($(this).val());
+        });
+        if(return_qty_sum !== Number($("#return_take_qty").val())){
+            alert("please check comment qty");
+            return false;
+        }
+        $(_this).attr("disabled",true);
+        $.post("/lots/return/",{
+            "eng_eid":$("#return_eng_eid").val(),
+            "pe_name":$("#return_pe_name").val(),
+            return_take_qty:$("#return_take_qty").val(),
+            return_shelf_number:$("#return_shelf_number").val(),
+            return_shelf_code:$("#return_shelf_code").val(),
+            return_qty:$("#return_qty").val(),
+            return_type: get_multi_input(".return_type"),
+            return_comment:get_multi_input(".return_comment"),
+            return_comment_qty:get_multi_input(".return_comment_qty")
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                $("#returnModal").modal('hide');
+                location.reload();
+            }else $(_this).attr("disabled",false);
+        });
+    };
+
+    add_lots = function (_this) {
+        if($("#add_lpn").val() === ""){
+            $("#add_lpn").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_lpn").removeClass("is-invalid");
+        }
+        if($("#add_part_number").val() === ""){
+            $("#add_part_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_part_number").removeClass("is-invalid");
+        }
+        if($("#add_package").val() === ""){
+            $("#add_package").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_package").removeClass("is-invalid");
+        }
+        if($("#add_qty").val() === ""){
+            $("#add_qty").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_qty").removeClass("is-invalid");
+        }
+        if($("#add_ppurpose").val() === ""){
+            $("#add_ppurpose").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_ppurpose").removeClass("is-invalid");
+        }
+        if($("#add_box_number").val() === ""){
+            $("#add_box_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_box_number").removeClass("is-invalid");
+        }
+        if($("#add_shelf_number").val() === ""){
+            $("#add_shelf_number").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_shelf_number").removeClass("is-invalid");
+        }
+        if($("#add_shelf_code").val() === ""){
+            $("#add_shelf_code").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_shelf_code").removeClass("is-invalid");
+        }
+        if($("#add_tracecode").val() === ""){
+            $("#add_tracecode").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#add_tracecode").removeClass("is-invalid");
+        }
+        $(_this).attr("disabled",true);
+        $.post("/lots/add/",{
+            "eng_eid":$("#add_eng_id").val(),
+            "mfg_eid":$("#add_mfg_id").val(),
+            "LPN":$("#add_lpn").val(),
+            "part_number":$("#add_part_number").val(),
+            "package":$("#add_package").val(),
+            "tracecode":$("#add_tracecode").val(),
+            "qty":$("#add_qty").val(),
+            "purpose":$("#add_ppurpose").val(),
+            "box_number":$("#add_box_number").val(),
+            "source":$("#add_source").val(),
+            "shelf_number":$("#add_shelf_number").val(),
+            "shelf_code":$("#add_shelf_code").val(),
+            "PE":$("#add_pe").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                $("#addModal").modal('hide');
+                location.reload();
+            }else $(_this).attr("disabled",false);
+        });
+    };
+
+    split_lots = function (_this) {
+        if($("#split_qty").val() === ""){
+            $("#split_qty").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#split_qty").removeClass("is-invalid");
+        }
+        if($("#split_box").val() === ""){
+            $("#split_box").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#split_box").removeClass("is-invalid");
+        }
+        if($("#split_purpose").val() === ""){
+            $("#split_purpose").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#split_purpose").removeClass("is-invalid");
+        }
+        if($("#split_shelf_number").val() === ""){
+            $("#split_shelf_number").addClass("is-invalid");
+            alert("Pleasefill all blanks");
+            return false;
+        } else {
+            $("#split_shelf_number").removeClass("is-invalid");
+        }
+        if($("#split_shelf_code").val() === ""){
+            $("#split_shelf_code").addClass("is-invalid");
+            alert("Please fill all blanks");
+            return false;
+        } else {
+            $("#split_shelf_code").removeClass("is-invalid");
+        }
+        $(_this).attr("disabled",true);
+        $.post("/lots/split/",{
+            "split_eng_eid":$("#split_eng_eid").val(),
+            "split_new_eid":$("#split_new_eid").val(),
+            "split_qty":$("#split_qty").val(),
+            "split_box":$("#split_box").val(),
+            "split_purpose":$("#split_purpose").val(),
+            "shelf_number":$("#split_shelf_number").val(),
+            "shelf_code":$("#split_shelf_code").val(),
+            "pe_name":$("#split_pe_name").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                $("#splitModal").modal('hide');
+                location.reload();
+            } else $(_this).attr("disabled",false);
+        });
+    };
+    scrap_lots = function (_this) {
+        $(_this).attr("disabled",true);
+        $.post("/lots/scrap_req/",{
+            "eng_eid":$("#scrap_eng_eid").val(),
+            "qty":$("#scrap_qty").val(),
+        },function(data,status){
+            alert("result: " + data );
+            if(data === "OK"){
+                location.reload();
+            }else $(_this).attr("disabled",false);
+        });
+    };
+    do_search = function(){
+        var query = {
+            "id":$("#sNo").val(),
+            "eng_eid":$("#eng-eid").val(),
+            "mfg_eid":$("#mfg-eid").val(),
+            "LPN":$("#LPN").val(),
+            "part_number":$("#part_number").val(),
+            "package":$("#package").val(),
+            "tracecode":$("#tracecode").val(),
+            "qty":$("#qty").val(),
+            "purpose":$("#purpose").val(),
+            "box_number":$("#box_number").val(),
+            "shelf_number":$("#shelf_number").val(),
+            "shelf_code":$("#shelf_code").val(),
+            "source":$("#source").val(),
+            "date":$("#date").val(),
+            "PE_id":$("#PE_id").val(),
+            "PM_id":$("#PM_id").val(),
+            "status":$("#status").val(),
+        };
+        window.location.href = "/lots/?"+$.param(query);
+    };
+    do_export = function(){
+        var query = {
+            "id":$("#sNo").val(),
+            "eng_eid":$("#eng-eid").val(),
+            "mfg_eid":$("#mfg-eid").val(),
+            "LPN":$("#LPN").val(),
+            "part_number":$("#part_number").val(),
+            "package":$("#package").val(),
+            "tracecode":$("#tracecode").val(),
+            "qty":$("#qty").val(),
+            "purpose":$("#purpose").val(),
+            "box_number":$("#box_number").val(),
+            "shelf_number":$("#shelf_number").val(),
+            "shelf_code":$("#shelf_code").val(),
+            "source":$("#source").val(),
+            "date":$("#date").val(),
+            "PE_id":$("#PE_id").val(),
+            "PM_id":$("#PM_id").val(),
+            "status":$("#status").val(),
+        };
+        window.location.href = "/export/lots/?"+$.param(query);
+    };
+
+    //check lot status
+    function check_data(status, msg){
+        status = status || "Out";
+        msg = msg || " is out.";
+        for(var i=0; i<$(".listed_check_no:checked").length; i++){ // check if "Out" lot is selected
+            var _this = $(".listed_check_no:checked")[i];
+            if($(_this).parent().parent().parent().next().next().text().indexOf(status)!== -1) {
+                alert($(_this).attr("data-eng-eid") + msg);
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    function get_current_qty() {
+        var return_qty;
+        $(".listed_check_no:checked").each(function () {
+            return_qty = $(this).attr("data-qty");
+        });
+        return return_qty;
+    }
+        function get_current_shelf_number() {
+        var return_qty;
+        $(".listed_check_no:checked").each(function () {
+            current_shelf_number = $(this).attr("data-shelf-number");
+        });
+        return current_shelf_number;
+    }
+    function get_current_shelf_code() {
+        var return_qty;
+        $(".listed_check_no:checked").each(function () {
+            current_shelf_code = $(this).attr("data-shelf-code");
+        });
+        return current_shelf_code;
+    }
+
+    function init_edit(){
+        if($(".listed_check_no:checked").length < 1){
+            alert("Please choose one lot.");
+            return;
+        }
+        if($(".listed_check_no:checked").length > 1){
+            alert("Only can choose one lot.");
+            return;
+        }
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("Out", " is Out, please return first.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+        if(check_data("Lot consumed", " is consumed.")){ return }
+        $('#editModal').modal({
+            show: true
+        });
+    }
+
+    function init_take(){
+        if($(".listed_check_no:checked").length < 1){
+            alert("Please choose one lot.");
+            return;
+        }
+
+        if(check_data("Out", " is Out, please return first.")){ return }
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+        if(check_data("Lot consumed", " is consumed.")){ return }
+
+        $('#takeModal').modal({
+            show: true
+        });
+    }
+    function init_merge(){
+        if($(".listed_check_no:checked").length < 2){
+            alert("Please choose 2 lots at least.");
+            return;
+        }
+        $("#merge_shelf_number").val(get_current_shelf_number());
+        $("#merge_shelf_code").val(get_current_shelf_code());
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("Out", " is Out, please return first.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+        if(check_data("Lot consumed", " is consumed.")){ return }
+
+        $('#mergeModal').modal({
+            show: true
+        });
+    }
+    function init_return(){
+        if($(".listed_check_no:checked").length > 1){
+            alert("Only can choose one lot.");
+            return;
+        }
+        if($(".listed_check_no:checked").length < 1){
+            alert("Please choose one lot.");
+            return;
+        }
+        $("#return_take_qty").val(get_current_qty());
+        $("#return_shelf_number").val(get_current_shelf_number());
+        $("#return_shelf_code").val(get_current_shelf_code());
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("In stock", " is in stock.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+        if(check_data("Lot consumed", " is consumed.")){ return }
+
+        $('#returnModal').modal({
+            show: true
+        });
+    }
+    function init_split(){
+        if($(".listed_check_no:checked").length > 1){
+            alert("Only can choose one lot.");
+            return;
+        }
+        if($(".listed_check_no:checked").length < 1){
+            alert("Please choose one lot.");
+            return;
+        }
+        $("#split_shelf_number").val(get_current_shelf_number());
+        $("#split_shelf_code").val(get_current_shelf_code());
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("Out", " is Out, please return first.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+        if(check_data("Lot consumed", " is consumed.")){ return }
+
+        $('#splitModal').modal({
+            show: true
+        });
+    }
+    function init_scrap(){
+        if($(".listed_check_no:checked").length > 1){
+            alert("Please choose only 1 lot.");
+            return;
+        }
+        if($(".listed_check_no:checked").length < 1){
+            alert("Please choose 1 lot.");
+            return;
+        }
+        $("#scrap_qty").val(get_current_qty());
+
+        if(check_data("Scrapped", " is scrapped.")){ return }
+        if(check_data("Out", " is Out, please return first.")){ return }
+        if(check_data("Submit for scrap", " is submit for scrap.")){ return }
+        if(check_data("Pending for scrap", " is pending for scrap.")){ return }
+
+        $('#scrapModal').modal({
+            show: true
+        });
+    }
+
+    function return_qty_change(){
+        if($("#return_take_qty").val()===$("#return_qty").val()){
+            $("#justification-in-return").hide();
+        } else {
+            $("#justification-in-return").show();
+        }
+    }
+
+    function get_add_eng_eid(){
+        $.get("/lots/gen_eng_eid/", function(data){
+            if(data === "error"){
+                alert("can not generate Lot Number, please contact admin.")
+            }
+            $("#add_eng_id").val(data);
+        });
+    }
+      function get_split_eng_eid(){
+        $.get("/lots/gen_eng_eid/", function(data){
+            if(data === "error"){
+                alert("can not generate Lot Number, please contact admin.")
+            }
+            $("#split_new_eid").val(data);
+        });
+    }
+
+    $("#add_shelf_number").on("change", function () {
+       shelfNumber2shelfCode = {
+            "老厂一层 #1":"L1",
+            "老厂一层 #1":"L2",
+            "老厂一层 #1":"L3",
+            "老厂一层 #1":"L4",
+            "老厂一层 #1":"L5",
+            "老厂一层 #2":"L1",
+            "老厂一层 #2":"L2",
+            "老厂一层 #2":"L3",
+            "老厂一层 #2":"L4",
+            "老厂一层 #2":"L5",
+            "老厂一层 #2":"L6",
+            "老厂一层 #2":"L7",
+            "老厂一层 #2":"L8",
+            "老厂一层 #2":"L9",
+            "老厂一层 #2":"L10",
+            "老厂一层 #3":"L1",
+            "老厂一层 #3":"L2",
+            "老厂一层 #3":"L3",
+            "老厂一层 #3":"L4",
+            "老厂一层 #3":"L5",
+            "老厂一层 #3":"L6",
+            "老厂一层 #3":"L7",
+            "老厂一层 #4":"L1",
+            "老厂一层 #4":"L2",
+            "老厂一层 #4":"L3",
+            "老厂一层 #4":"L4",
+            "老厂一层 #4":"L5",
+            "老厂一层 #4":"L6",
+            "老厂一层 #4":"L7",
+            "老厂一层 #4":"L8",
+            "老厂一层 #4":"L9",
+            "老厂一层 #4":"L10",
+            "老厂一层 #4":"L11",
+            "老厂一层 #5":"L1",
+            "老厂一层 #5":"L2",
+            "老厂一层 #5":"L3",
+            "老厂一层 #5":"L4",
+            "老厂一层 #5":"L5",
+            "老厂一层 #5":"L6",
+            "老厂一层 #5":"L7",
+            "老厂一层 #5":"L8",
+            "老厂一层 #5":"L9",
+            "老厂一层 #5":"L10",
+            "老厂一层 #5":"L11",
+            "老厂一层 #6":"L1",
+            "老厂一层 #6":"L2",
+            "老厂一层 #6":"L3",
+            "老厂一层 #6":"L4",
+            "老厂一层 #6":"L5",
+            "风机夹层 #2":"L1",
+            "风机夹层 #2":"L2",
+            "风机夹层 #2":"L3",
+            "风机夹层 #2":"L4",
+            "风机夹层 #2":"L5",
+            "风机夹层 #2":"L6",
+            "风机夹层 #4":"L1",
+            "风机夹层 #4":"L2",
+            "风机夹层 #4":"L3",
+            "风机夹层 #4":"L4",
+            "风机夹层 #4":"L5",
+            "风机夹层 #4":"L6",
+            "风机夹层 #4":"L7",
+            "风机夹层 #4":"L8",
+            "风机夹层 #5":"L1",
+            "风机夹层 #5":"L2",
+            "风机夹层 #5":"L3",
+            "风机夹层 #5":"L4",
+            "风机夹层 #5":"L5",
+            "风机夹层 #5":"L6",
+            "风机夹层 #5":"L7",
+            "风机夹层 #5":"L8",
+            "风机夹层 #6":"L1",
+            "风机夹层 #6":"L2",
+            "风机夹层 #6":"L3",
+            "风机夹层 #6":"L4",
+            "风机夹层 #6":"L5",
+            "风机夹层 #6":"L6",
+            "风机夹层 #6":"L7",
+            "风机夹层 #6":"L8",
+            "风机夹层 #6":"L9",
+            "风机夹层 #6":"L10",
+       };
+       $("#add_shelf_code").val(shelfNumber2shelfCode[this.value]);
+    });
+    $("#merge_shelf_number").on("change", function () {
+       shelfNumber2shelfCode = {
+            "老厂一层 #1":"L1",
+            "老厂一层 #1":"L2",
+            "老厂一层 #1":"L3",
+            "老厂一层 #1":"L4",
+            "老厂一层 #1":"L5",
+            "老厂一层 #2":"L1",
+            "老厂一层 #2":"L2",
+            "老厂一层 #2":"L3",
+            "老厂一层 #2":"L4",
+            "老厂一层 #2":"L5",
+            "老厂一层 #2":"L6",
+            "老厂一层 #2":"L7",
+            "老厂一层 #2":"L8",
+            "老厂一层 #2":"L9",
+            "老厂一层 #2":"L10",
+            "老厂一层 #3":"L1",
+            "老厂一层 #3":"L2",
+            "老厂一层 #3":"L3",
+            "老厂一层 #3":"L4",
+            "老厂一层 #3":"L5",
+            "老厂一层 #3":"L6",
+            "老厂一层 #3":"L7",
+            "老厂一层 #4":"L1",
+            "老厂一层 #4":"L2",
+            "老厂一层 #4":"L3",
+            "老厂一层 #4":"L4",
+            "老厂一层 #4":"L5",
+            "老厂一层 #4":"L6",
+            "老厂一层 #4":"L7",
+            "老厂一层 #4":"L8",
+            "老厂一层 #4":"L9",
+            "老厂一层 #4":"L10",
+            "老厂一层 #4":"L11",
+            "老厂一层 #5":"L1",
+            "老厂一层 #5":"L2",
+            "老厂一层 #5":"L3",
+            "老厂一层 #5":"L4",
+            "老厂一层 #5":"L5",
+            "老厂一层 #5":"L6",
+            "老厂一层 #5":"L7",
+            "老厂一层 #5":"L8",
+            "老厂一层 #5":"L9",
+            "老厂一层 #5":"L10",
+            "老厂一层 #5":"L11",
+            "老厂一层 #6":"L1",
+            "老厂一层 #6":"L2",
+            "老厂一层 #6":"L3",
+            "老厂一层 #6":"L4",
+            "老厂一层 #6":"L5",
+            "风机夹层 #2":"L1",
+            "风机夹层 #2":"L2",
+            "风机夹层 #2":"L3",
+            "风机夹层 #2":"L4",
+            "风机夹层 #2":"L5",
+            "风机夹层 #2":"L6",
+            "风机夹层 #4":"L1",
+            "风机夹层 #4":"L2",
+            "风机夹层 #4":"L3",
+            "风机夹层 #4":"L4",
+            "风机夹层 #4":"L5",
+            "风机夹层 #4":"L6",
+            "风机夹层 #4":"L7",
+            "风机夹层 #4":"L8",
+            "风机夹层 #5":"L1",
+            "风机夹层 #5":"L2",
+            "风机夹层 #5":"L3",
+            "风机夹层 #5":"L4",
+            "风机夹层 #5":"L5",
+            "风机夹层 #5":"L6",
+            "风机夹层 #5":"L7",
+            "风机夹层 #5":"L8",
+            "风机夹层 #6":"L1",
+            "风机夹层 #6":"L2",
+            "风机夹层 #6":"L3",
+            "风机夹层 #6":"L4",
+            "风机夹层 #6":"L5",
+            "风机夹层 #6":"L6",
+            "风机夹层 #6":"L7",
+            "风机夹层 #6":"L8",
+            "风机夹层 #6":"L9",
+            "风机夹层 #6":"L10",
+       };
+       $("#merge_shelf_code").val(shelfNumber2shelfCode[this.value]);
+    });
+
+    $("#return_shelf_number").on("change", function () {
+       shelfNumber2shelfCode = {
+            "老厂一层 #1":"L1",
+            "老厂一层 #1":"L2",
+            "老厂一层 #1":"L3",
+            "老厂一层 #1":"L4",
+            "老厂一层 #1":"L5",
+            "老厂一层 #2":"L1",
+            "老厂一层 #2":"L2",
+            "老厂一层 #2":"L3",
+            "老厂一层 #2":"L4",
+            "老厂一层 #2":"L5",
+            "老厂一层 #2":"L6",
+            "老厂一层 #2":"L7",
+            "老厂一层 #2":"L8",
+            "老厂一层 #2":"L9",
+            "老厂一层 #2":"L10",
+            "老厂一层 #3":"L1",
+            "老厂一层 #3":"L2",
+            "老厂一层 #3":"L3",
+            "老厂一层 #3":"L4",
+            "老厂一层 #3":"L5",
+            "老厂一层 #3":"L6",
+            "老厂一层 #3":"L7",
+            "老厂一层 #4":"L1",
+            "老厂一层 #4":"L2",
+            "老厂一层 #4":"L3",
+            "老厂一层 #4":"L4",
+            "老厂一层 #4":"L5",
+            "老厂一层 #4":"L6",
+            "老厂一层 #4":"L7",
+            "老厂一层 #4":"L8",
+            "老厂一层 #4":"L9",
+            "老厂一层 #4":"L10",
+            "老厂一层 #4":"L11",
+            "老厂一层 #5":"L1",
+            "老厂一层 #5":"L2",
+            "老厂一层 #5":"L3",
+            "老厂一层 #5":"L4",
+            "老厂一层 #5":"L5",
+            "老厂一层 #5":"L6",
+            "老厂一层 #5":"L7",
+            "老厂一层 #5":"L8",
+            "老厂一层 #5":"L9",
+            "老厂一层 #5":"L10",
+            "老厂一层 #5":"L11",
+            "老厂一层 #6":"L1",
+            "老厂一层 #6":"L2",
+            "老厂一层 #6":"L3",
+            "老厂一层 #6":"L4",
+            "老厂一层 #6":"L5",
+            "风机夹层 #2":"L1",
+            "风机夹层 #2":"L2",
+            "风机夹层 #2":"L3",
+            "风机夹层 #2":"L4",
+            "风机夹层 #2":"L5",
+            "风机夹层 #2":"L6",
+            "风机夹层 #4":"L1",
+            "风机夹层 #4":"L2",
+            "风机夹层 #4":"L3",
+            "风机夹层 #4":"L4",
+            "风机夹层 #4":"L5",
+            "风机夹层 #4":"L6",
+            "风机夹层 #4":"L7",
+            "风机夹层 #4":"L8",
+            "风机夹层 #5":"L1",
+            "风机夹层 #5":"L2",
+            "风机夹层 #5":"L3",
+            "风机夹层 #5":"L4",
+            "风机夹层 #5":"L5",
+            "风机夹层 #5":"L6",
+            "风机夹层 #5":"L7",
+            "风机夹层 #5":"L8",
+            "风机夹层 #6":"L1",
+            "风机夹层 #6":"L2",
+            "风机夹层 #6":"L3",
+            "风机夹层 #6":"L4",
+            "风机夹层 #6":"L5",
+            "风机夹层 #6":"L6",
+            "风机夹层 #6":"L7",
+            "风机夹层 #6":"L8",
+            "风机夹层 #6":"L9",
+            "风机夹层 #6":"L10",
+       };
+       $("#return_shelf_code").val(shelfNumber2shelfCode[this.value]);
+    });
+    $("#split_shelf_number").on("change", function () {
+       shelfNumber2shelfCode = {
+            "老厂一层 #1":"L1",
+            "老厂一层 #1":"L2",
+            "老厂一层 #1":"L3",
+            "老厂一层 #1":"L4",
+            "老厂一层 #1":"L5",
+            "老厂一层 #2":"L1",
+            "老厂一层 #2":"L2",
+            "老厂一层 #2":"L3",
+            "老厂一层 #2":"L4",
+            "老厂一层 #2":"L5",
+            "老厂一层 #2":"L6",
+            "老厂一层 #2":"L7",
+            "老厂一层 #2":"L8",
+            "老厂一层 #2":"L9",
+            "老厂一层 #2":"L10",
+            "老厂一层 #3":"L1",
+            "老厂一层 #3":"L2",
+            "老厂一层 #3":"L3",
+            "老厂一层 #3":"L4",
+            "老厂一层 #3":"L5",
+            "老厂一层 #3":"L6",
+            "老厂一层 #3":"L7",
+            "老厂一层 #4":"L1",
+            "老厂一层 #4":"L2",
+            "老厂一层 #4":"L3",
+            "老厂一层 #4":"L4",
+            "老厂一层 #4":"L5",
+            "老厂一层 #4":"L6",
+            "老厂一层 #4":"L7",
+            "老厂一层 #4":"L8",
+            "老厂一层 #4":"L9",
+            "老厂一层 #4":"L10",
+            "老厂一层 #4":"L11",
+            "老厂一层 #5":"L1",
+            "老厂一层 #5":"L2",
+            "老厂一层 #5":"L3",
+            "老厂一层 #5":"L4",
+            "老厂一层 #5":"L5",
+            "老厂一层 #5":"L6",
+            "老厂一层 #5":"L7",
+            "老厂一层 #5":"L8",
+            "老厂一层 #5":"L9",
+            "老厂一层 #5":"L10",
+            "老厂一层 #5":"L11",
+            "老厂一层 #6":"L1",
+            "老厂一层 #6":"L2",
+            "老厂一层 #6":"L3",
+            "老厂一层 #6":"L4",
+            "老厂一层 #6":"L5",
+            "风机夹层 #2":"L1",
+            "风机夹层 #2":"L2",
+            "风机夹层 #2":"L3",
+            "风机夹层 #2":"L4",
+            "风机夹层 #2":"L5",
+            "风机夹层 #2":"L6",
+            "风机夹层 #4":"L1",
+            "风机夹层 #4":"L2",
+            "风机夹层 #4":"L3",
+            "风机夹层 #4":"L4",
+            "风机夹层 #4":"L5",
+            "风机夹层 #4":"L6",
+            "风机夹层 #4":"L7",
+            "风机夹层 #4":"L8",
+            "风机夹层 #5":"L1",
+            "风机夹层 #5":"L2",
+            "风机夹层 #5":"L3",
+            "风机夹层 #5":"L4",
+            "风机夹层 #5":"L5",
+            "风机夹层 #5":"L6",
+            "风机夹层 #5":"L7",
+            "风机夹层 #5":"L8",
+            "风机夹层 #6":"L1",
+            "风机夹层 #6":"L2",
+            "风机夹层 #6":"L3",
+            "风机夹层 #6":"L4",
+            "风机夹层 #6":"L5",
+            "风机夹层 #6":"L6",
+            "风机夹层 #6":"L7",
+            "风机夹层 #6":"L8",
+            "风机夹层 #6":"L9",
+            "风机夹层 #6":"L10",
+       };
+       $("#split_shelf_code").val(shelfNumber2shelfCode[this.value]);
+    });
+
+    $("#edit_shelf_number").on("change", function () {
+       shelfNumber2shelfCode = {
+            "老厂一层 #1":"L1",
+            "老厂一层 #1":"L2",
+            "老厂一层 #1":"L3",
+            "老厂一层 #1":"L4",
+            "老厂一层 #1":"L5",
+            "老厂一层 #2":"L1",
+            "老厂一层 #2":"L2",
+            "老厂一层 #2":"L3",
+            "老厂一层 #2":"L4",
+            "老厂一层 #2":"L5",
+            "老厂一层 #2":"L6",
+            "老厂一层 #2":"L7",
+            "老厂一层 #2":"L8",
+            "老厂一层 #2":"L9",
+            "老厂一层 #2":"L10",
+            "老厂一层 #3":"L1",
+            "老厂一层 #3":"L2",
+            "老厂一层 #3":"L3",
+            "老厂一层 #3":"L4",
+            "老厂一层 #3":"L5",
+            "老厂一层 #3":"L6",
+            "老厂一层 #3":"L7",
+            "老厂一层 #4":"L1",
+            "老厂一层 #4":"L2",
+            "老厂一层 #4":"L3",
+            "老厂一层 #4":"L4",
+            "老厂一层 #4":"L5",
+            "老厂一层 #4":"L6",
+            "老厂一层 #4":"L7",
+            "老厂一层 #4":"L8",
+            "老厂一层 #4":"L9",
+            "老厂一层 #4":"L10",
+            "老厂一层 #4":"L11",
+            "老厂一层 #5":"L1",
+            "老厂一层 #5":"L2",
+            "老厂一层 #5":"L3",
+            "老厂一层 #5":"L4",
+            "老厂一层 #5":"L5",
+            "老厂一层 #5":"L6",
+            "老厂一层 #5":"L7",
+            "老厂一层 #5":"L8",
+            "老厂一层 #5":"L9",
+            "老厂一层 #5":"L10",
+            "老厂一层 #5":"L11",
+            "老厂一层 #6":"L1",
+            "老厂一层 #6":"L2",
+            "老厂一层 #6":"L3",
+            "老厂一层 #6":"L4",
+            "老厂一层 #6":"L5",
+            "风机夹层 #2":"L1",
+            "风机夹层 #2":"L2",
+            "风机夹层 #2":"L3",
+            "风机夹层 #2":"L4",
+            "风机夹层 #2":"L5",
+            "风机夹层 #2":"L6",
+            "风机夹层 #4":"L1",
+            "风机夹层 #4":"L2",
+            "风机夹层 #4":"L3",
+            "风机夹层 #4":"L4",
+            "风机夹层 #4":"L5",
+            "风机夹层 #4":"L6",
+            "风机夹层 #4":"L7",
+            "风机夹层 #4":"L8",
+            "风机夹层 #5":"L1",
+            "风机夹层 #5":"L2",
+            "风机夹层 #5":"L3",
+            "风机夹层 #5":"L4",
+            "风机夹层 #5":"L5",
+            "风机夹层 #5":"L6",
+            "风机夹层 #5":"L7",
+            "风机夹层 #5":"L8",
+            "风机夹层 #6":"L1",
+            "风机夹层 #6":"L2",
+            "风机夹层 #6":"L3",
+            "风机夹层 #6":"L4",
+            "风机夹层 #6":"L5",
+            "风机夹层 #6":"L6",
+            "风机夹层 #6":"L7",
+            "风机夹层 #6":"L8",
+            "风机夹层 #6":"L9",
+            "风机夹层 #6":"L10",
+       };
+       $("#edit_shelf_code").val(shelfNumber2shelfCode[this.value]);
+    });
+
+    $("tbody>tr>th>input").keydown(function(event){
+        if(event.which == "13")
+            do_search();
+    });
+
+    var status = "{{request.GET.status}}" || "in";
+    $("#status").val(status);
+    $("#status").change(function(){do_search();});
+
+    if (window.location.search.charAt(0) == "?"){
+        $(".page-link").each(function(_,_this){$(this).prop("href",window.location.search+"&page="+$(this).data("page"))});
+     }else{
+        $(".page-link").each(function(_,_this){$(this).prop("href",window.location.search+"?page="+$(this).data("page"))});
+     }
+
+</script>
+{% endblock %}
